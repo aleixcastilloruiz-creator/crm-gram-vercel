@@ -24,6 +24,7 @@ async function readKey(id: string): Promise<any | null> {
   const row = await prisma.whatsAppAuthKey.findUnique({ where: { id } });
   if (!row) return null;
   try {
+    const { BufferJSON } = await loadBaileys("@whiskeysockets/baileys");
     return JSON.parse(row.data, BufferJSON.reviver);
   } catch {
     return null;
@@ -31,6 +32,7 @@ async function readKey(id: string): Promise<any | null> {
 }
 
 async function writeKey(id: string, data: any): Promise<void> {
+  const { BufferJSON } = await loadBaileys("@whiskeysockets/baileys");
   const serialized = JSON.stringify(data, BufferJSON.replacer);
   await prisma.whatsAppAuthKey.upsert({
     where: { id },
