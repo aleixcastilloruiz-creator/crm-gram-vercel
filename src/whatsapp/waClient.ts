@@ -1,9 +1,12 @@
-import makeWASocket, {
-  Browsers,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  WASocket,
-} from "@whiskeysockets/baileys";
+import type { WASocket } from "@whiskeysockets/baileys";
+
+// Baileys es ESM. El proyecto compila a CommonJS, por lo que un import
+// estático se convierte en require() y provoca ERR_REQUIRE_ESM en Node.
+type BaileysModule = typeof import("@whiskeysockets/baileys");
+const loadBaileys = new Function(
+  "specifier",
+  "return import(specifier)"
+) as (specifier: string) => Promise<BaileysModule>;
 import { Boom } from "@hapi/boom";
 import pino from "pino";
 import QRCode from "qrcode";
@@ -81,6 +84,8 @@ async function doConnect(): Promise<void> {
   try {
     waState.status = "connecting";
     waState.lastError = null;
+    const { default: makeWASocket, Browsers, DisconnectReason, fetchLatestBaileysVersion } =
+      await loadBaileys("@whiskeysockets/baileys");
     const { state, saveCreds } = await useDbAuthState();
     const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: undefined as any }));
 
