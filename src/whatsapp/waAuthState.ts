@@ -1,11 +1,14 @@
 import { prisma } from "../utils/prisma";
-import {
-  AuthenticationState,
-  BufferJSON,
-  initAuthCreds,
-  proto,
-  SignalDataTypeMap,
-} from "@whiskeysockets/baileys";
+import type { AuthenticationState, SignalDataTypeMap } from "@whiskeysockets/baileys";
+
+// Baileys publica ESM. Como este proyecto compila TypeScript a CommonJS,
+// un import() normal puede convertirse en require() y fallar en Vercel.
+// Usamos import() nativo sin que TypeScript lo transforme.
+type BaileysModule = typeof import("@whiskeysockets/baileys");
+const loadBaileys = new Function(
+  "specifier",
+  "return import(specifier)"
+) as (specifier: string) => Promise<BaileysModule>;
 
 /**
  * Adaptador de "multi file auth state" de Baileys pero contra la BD en vez
@@ -44,6 +47,7 @@ export async function useDbAuthState(): Promise<{
   state: AuthenticationState;
   saveCreds: () => Promise<void>;
 }> {
+  const { BufferJSON, initAuthCreds, proto } = await loadBaileys("@whiskeysockets/baileys");
   const existingCreds = await readKey("creds");
   const creds = existingCreds || initAuthCreds();
 
